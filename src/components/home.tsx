@@ -4,6 +4,7 @@ import { Search, TrendingUp, X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "./navbar";
 import { useLanguage } from "../contexts/language-context";
+import { API_URL } from "../config";
 
 interface Suggestion {
   docno: string;
@@ -74,7 +75,7 @@ export function Home() {
     debounceRef.current = setTimeout(async () => {
       try {
         const res  = await fetch(
-          `http://localhost:8000/autocomplete?q=${encodeURIComponent(q.trim())}&limit=8`
+          `${API_URL}/autocomplete?q=${encodeURIComponent(q.trim())}&limit=8`
         );
         if (!res.ok) return;
         const data = await res.json();
