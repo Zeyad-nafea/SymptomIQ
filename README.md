@@ -1,72 +1,72 @@
-# SymptomIQ 🩺
+# SymptomIQ
 
 A multilingual medical symptom search engine powered by a hybrid retrieval pipeline combining classical IR models with transformer-based reranking.
 
 ---
 
-## 🌐 Live Demo
+## Live Demo
 
 - **Frontend:** [symptom-iq.vercel.app](https://symptom-iq.vercel.app)
 - **Backend API:** [zeyad-nafea-symptomiq-backend.hf.space](https://zeyad-nafea-symptomiq-backend.hf.space)
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 SymptomIQ allows users to describe their symptoms in **English, Arabic, French, Spanish, or German** and retrieves the most relevant medical conditions using a multi-stage retrieval pipeline. Results are ranked by three different IR models and reranked using a biomedical BERT model.
 
 ---
 
-## ✨ Features
+## Features
 
-- 🌍 **Multilingual support** — detects and translates queries in 4 languages
-- 🔍 **TF-IDF, BM25, and LM-JM** ranking with switchable views
-- 🤖 **PubMedBERT reranking** for semantic relevance
-- 📖 **UMLS synonym expansion** for medical terminology
-- 🔄 **RM3 pseudo-relevance feedback** for query expansion
-- 💊 **Detailed condition pages** with symptoms, causes, treatments, and clinical guidance
-- 🌐 **Result translation** into Arabic, French, and Spanish
-- 🔤 **TF-IDF autocomplete** for the search bar
-- 🌙 **Dark mode** support
-- 📱 **Fully responsive** mobile-friendly design
+- Multilingual support — detects and translates queries in 4 languages
+- TF-IDF, BM25, and LM-JM ranking with switchable views
+- PubMedBERT reranking for semantic relevance
+- UMLS synonym expansion for medical terminology
+- RM3 pseudo-relevance feedback for query expansion
+- Detailed condition pages with symptoms, causes, treatments, and clinical guidance
+- Result translation into Arabic, French, and Spanish
+- TF-IDF autocomplete for the search bar
+- Dark mode support
+- Fully responsive mobile-friendly design
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 User Query
-    │
-    ▼
+    |
+    v
 Language Detection (fastText lid.176.bin)
-    │
-    ▼
+    |
+    v
 Translation to English (MarianMT)
-    │
-    ▼
+    |
+    v
 UMLS Synonym Expansion (synonyms_clean.csv)
-    │
-    ▼
+    |
+    v
 Preprocessing & Stemming (NLTK PorterStemmer)
-    │
-    ▼
+    |
+    v
 RM3 Pseudo-Relevance Feedback
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  BM25  │  TF-IDF  │  LM-JM (λ=0.3) │
-└─────────────────────────────────────┘
-    │
-    ▼
+    |
+    v
++-------------------------------------+
+|  BM25  |  TF-IDF  |  LM-JM (L=0.3) |
++-------------------------------------+
+    |
+    v
 PubMedBERT Reranking (S-PubMedBert-MS-MARCO)
-    │
-    ▼
-Ranked Results → FastAPI → React Frontend
+    |
+    v
+Ranked Results -> FastAPI -> React Frontend
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 | Technology | Purpose |
@@ -92,7 +92,7 @@ Ranked Results → FastAPI → React Frontend
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 symptomiq-backend/
@@ -128,7 +128,7 @@ symptomiq-frontend/
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -177,7 +177,7 @@ POST /search
 
 ---
 
-## 🚀 Local Development
+## Local Development
 
 ### Backend
 
@@ -214,18 +214,18 @@ Make sure `src/config.ts` points to `http://localhost:8000` for local developmen
 
 ---
 
-## 🌍 Supported Languages
+## Supported Languages
 
 | Language | Detection | Translation | Results Translation |
 |---|---|---|---|
-| English | ✅ | — | — |
-| Arabic | ✅ | ✅ MarianMT | ✅ |
-| French | ✅ | ✅ MarianMT | ✅ |
-| Spanish | ✅ | ✅ MarianMT | ✅ |
+| English | Yes | — | — |
+| Arabic | Yes | Yes (MarianMT) | Yes |
+| French | Yes | Yes (MarianMT) | Yes |
+| Spanish | Yes | Yes (MarianMT) | Yes |
 
 ---
 
-## 📊 Retrieval Performance
+## Retrieval Performance
 
 | Ranker | P@5 | Precision | Recall | F1 |
 |---|---|---|---|---|
@@ -235,12 +235,12 @@ Make sure `src/config.ts` points to `http://localhost:8000` for local developmen
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 SymptomIQ is for **informational purposes only** and does not constitute medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for medical concerns.
 
 ---
 
-## 📄 License
+## License
 
 The medical data used in this project is sourced from publicly available medical resources. UMLS synonym data is used under the UMLS license terms and is not redistributed publicly.
