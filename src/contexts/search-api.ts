@@ -1,6 +1,6 @@
 // src/contexts/search-api.ts — full replacement
 const MOCK_MODE = false;
-const BASE_URL  = "http://localhost:8000";
+const BASE_URL  = "https://zeyad-nafea-symptomiq-backend.hf.space";
 
 export interface SearchResult {
   docno:           string;
