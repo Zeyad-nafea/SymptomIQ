@@ -19,7 +19,7 @@ SymptomIQ allows users to describe their symptoms in **English, Arabic, French, 
 
 ## ✨ Features
 
-- 🌍 **Multilingual support** — detects and translates queries in 5 languages
+- 🌍 **Multilingual support** — detects and translates queries in 4 languages
 - 🔍 **TF-IDF, BM25, and LM-JM** ranking with switchable views
 - 🤖 **PubMedBERT reranking** for semantic relevance
 - 📖 **UMLS synonym expansion** for medical terminology
