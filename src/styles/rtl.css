@@ -1,0 +1,43 @@
+/* ── RTL global fixes ───────────────────────────── */
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .force-ltr {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Arabic typography */
+.font-ar {
+  font-family: 'Cairo', sans-serif;
+}
+
+.font-en {
+  font-family: 'Sora', sans-serif;
+}
+
+[dir="rtl"] .rtl-flex-row-reverse {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .rtl-justify-end {
+  justify-content: flex-end !important;
+}
+
+[dir="rtl"] .rtl-text-right {
+  text-align: right !important;
+}
+
+[dir="rtl"] .rtl-text-left {
+  text-align: left !important;
+}
+
+[dir="rtl"] .rtl-text-start {
+  text-align: start !important;
+}
+
+[dir="rtl"] .rtl-text-end {
+  text-align: end !important;
+}
