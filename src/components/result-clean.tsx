@@ -14,6 +14,7 @@ import { MobileCTABar } from "./mobile-cta-bar";
 import { conditionDetailsMap } from "../data/condition-details";
 import { useLanguage } from "../contexts/language-context";
 import { useRegion } from "../contexts/region-context";
+import { API_URL } from "../config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -427,7 +428,7 @@ export function ResultClean() {
     }
 
     setDetailsLoading(true);
-    fetch(`http://localhost:8000/condition/${condition.id}`)
+    fetch(`${API_URL}/condition/${condition.id}`)
       .then(r => r.ok ? r.json() : null)
       .then(async (data: BackendCondition | null) => {
         if (!data) return;
@@ -436,7 +437,7 @@ export function ResultClean() {
         if (language !== "en") {
           setIsTranslating(true);
           try {
-            const tr = await fetch("http://localhost:8000/translate", {
+            const tr = await fetch(`${API_URL}/translate`, {
               method:  "POST",
               headers: { "Content-Type": "application/json" },
               body:    JSON.stringify({
