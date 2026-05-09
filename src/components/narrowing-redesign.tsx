@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Navbar } from "./navbar";
 import { useLanguage } from "../contexts/language-context";
 import { searchConditions, SearchResult } from "../contexts/search-api";
+import { API_URL } from "../config";
 
 type Ranker = "bert" | "bm25" | "tfidf";
 
@@ -53,7 +54,7 @@ export function NarrowingRedesign() {
     });
 
     setIsTranslating(true);
-    fetch("http://localhost:8000/translate", {
+    fetch(`${API_URL}/translate`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ fields: payload, targetLanguage: language }),
