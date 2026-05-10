@@ -16,9 +16,11 @@ const EVAL_METRICS = {
   tfidf: { p5: 0.80, precision: 0.16, recall: 0.80, f1: 0.27 },
 };
 
+const RESULTS_PER_PAGE = 10;
+
 export function NarrowingRedesign() {
-  const location          = useLocation();
-  const navigate          = useNavigate();
+  const location               = useLocation();
+  const navigate               = useNavigate();
   const { t, isRTL, language } = useLanguage();
 
   const query = location.state?.query || "";
@@ -32,6 +34,7 @@ export function NarrowingRedesign() {
   const [ranker,            setRanker]            = useState<Ranker>("bert");
   const [timingMs,          setTimingMs]          = useState<number | null>(null);
   const [translatedResults, setTranslatedResults] = useState<Record<string, { name: string; description: string }>>({});
+  const [currentPage,       setCurrentPage]       = useState(1);
 
   // Run search on mount
   useEffect(() => {
@@ -39,17 +42,23 @@ export function NarrowingRedesign() {
     runSearch(query);
   }, [query]);
 
-  // Translate top 5 whenever results, ranker, or language changes
+  // Reset page when ranker or results change
   useEffect(() => {
-    const top5 = allResults[ranker].slice(0, 5);
+    setCurrentPage(1);
+  }, [ranker, allResults]);
 
-    if (!top5.length || language === "en") {
+  // Translate current page results whenever page, results, ranker, or language changes
+  useEffect(() => {
+    const start = (currentPage - 1) * RESULTS_PER_PAGE;
+    const pageResults = allResults[ranker].slice(start, start + RESULTS_PER_PAGE);
+
+    if (!pageResults.length || language === "en") {
       setTranslatedResults({});
       return;
     }
 
     const payload: Record<string, { name: string; description: string }> = {};
-    top5.forEach(r => {
+    pageResults.forEach(r => {
       payload[r.docno] = { name: r.name, description: r.description };
     });
 
@@ -66,7 +75,7 @@ export function NarrowingRedesign() {
       })
       .catch(() => setTranslatedResults({}))
       .finally(() => setIsTranslating(false));
-  }, [allResults, ranker, language]);
+  }, [allResults, ranker, language, currentPage]);
 
   const runSearch = async (q: string) => {
     setIsLoading(true);
@@ -87,7 +96,12 @@ export function NarrowingRedesign() {
     }
   };
 
-  const results = allResults[ranker];
+  const results         = allResults[ranker];
+  const totalPages      = Math.ceil(results.length / RESULTS_PER_PAGE);
+  const paginatedResults = results.slice(
+    (currentPage - 1) * RESULTS_PER_PAGE,
+    currentPage * RESULTS_PER_PAGE
+  );
   const metrics = EVAL_METRICS[ranker];
 
   const getLabel = (score: number) => {
@@ -101,13 +115,17 @@ export function NarrowingRedesign() {
     window.location.reload();
   };
 
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const rankerLabel: Record<Ranker, string> = {
     bert:  "BM25 + PubMedBERT",
     bm25:  "BM25",
     tfidf: "TF-IDF",
   };
 
-  // Helper: get translated name, falling back to English if same or missing
   const getDisplayName = (r: SearchResult) => {
     const tr = translatedResults[r.docno];
     if (tr?.name && tr.name !== r.name) return `${tr.name} (${r.name})`;
@@ -160,7 +178,7 @@ export function NarrowingRedesign() {
               style={{ fontFamily: "var(--font-family-heading)" }}>
               {isLoading
                 ? t("narrow.searching")
-                : `${results.length} ${t("narrow.results")}`}
+                : `${results.length} ${t("narrow.results")} · Page ${currentPage}/${totalPages || 1}`}
               {timingMs !== null && !isLoading && (
                 <span className="mx-2 text-sm font-normal text-[#94a3b8]">· {timingMs}ms</span>
               )}
@@ -235,7 +253,7 @@ export function NarrowingRedesign() {
         {/* Results */}
         {!isLoading && !error && !isTranslating && (
           <div className="space-y-4">
-            {results.map((r, i) => (
+            {paginatedResults.map((r, i) => (
               <motion.div key={`${ranker}-${r.docno}`}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
@@ -258,7 +276,7 @@ export function NarrowingRedesign() {
                 <div className={`flex items-start justify-between gap-4 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}>
                   {/* Score badge — left in RTL */}
                   {isRTL && (
-                    <div className={`flex-shrink-0 ${isRTL ? "mr-4 text-right" : "ml-4 text-right"}`}>
+                    <div className="flex-shrink-0 text-right">
                       <div className="text-sm font-semibold text-[#3B82F6]">{getLabel(r.relevanceScore)}</div>
                       <div className="text-xs text-[#94a3b8] mt-0.5">
                         {ranker === "tfidf" ? `TF-IDF: ${r.tfidfScore?.toFixed(1)}` :
@@ -269,8 +287,10 @@ export function NarrowingRedesign() {
                   )}
 
                   <div className="flex-1">
-                    <div className={`flex items-center gap-3 mb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                      <span className="text-lg font-semibold text-[#64748b] dark:text-[#94A3B8]">#{i + 1}</span>
+                    <div className={`flex items-center gap-3 mb-2 ${isRTL ? "flex-row-reverse justify-end" : ""}`}>
+                      <span className="text-lg font-semibold text-[#64748b] dark:text-[#94A3B8]">
+                        #{(currentPage - 1) * RESULTS_PER_PAGE + i + 1}
+                      </span>
                       <h3
                         className={`text-xl font-semibold break-words leading-relaxed text-[#1e293b] dark:text-[#F9FAFB] group-hover:text-[#3B82F6] transition-colors ${isRTL ? "text-right" : ""}`}
                         style={{ fontFamily: "var(--font-family-heading)" }}>
@@ -313,6 +333,41 @@ export function NarrowingRedesign() {
                 )}
               </motion.div>
             ))}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className={`flex items-center justify-center gap-2 mt-8 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] disabled:opacity-40 hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+                >
+                  {isRTL ? "التالي" : "Previous"}
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`w-9 h-9 text-sm font-semibold rounded-lg transition-colors ${
+                      currentPage === page
+                        ? "bg-[#3B82F6] text-white shadow-sm"
+                        : "border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] hover:bg-[#f1f5f9] dark:hover:bg-[#334155]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] disabled:opacity-40 hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+                >
+                  {isRTL ? "السابق" : "Next"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
