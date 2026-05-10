@@ -242,7 +242,7 @@ export function Home() {
                     <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
                       Conditions matching your input
                     </span>
-                    <span className="text-[10px] text-[#94a3b8]">TF-IDF similarity</span>
+                    <span className="text-[10px] text-[#94a3b8]">Similarity score</span>
                   </div>
 
                   {suggestions.map((s, i) => (
