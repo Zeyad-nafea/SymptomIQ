@@ -73,19 +73,25 @@ export function Home() {
     }
 
     debounceRef.current = setTimeout(async () => {
-      try {
-        const res  = await fetch(
-          `${API_URL}/autocomplete?q=${encodeURIComponent(q.trim())}&limit=8`
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        setSuggestions(data.suggestions ?? []);
-        setShowSuggestions((data.suggestions ?? []).length > 0);
-      } catch {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    }, 180);
+  try {
+    const res = await fetch(
+      `${API_URL}/autocomplete?q=${encodeURIComponent(q.trim())}&limit=8`
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    
+    // ── ADD THESE TWO LINES ──
+    console.log("data:", data);
+    console.log("suggestions length:", data.suggestions?.length);
+    
+    setSuggestions(data.suggestions ?? []);
+    setShowSuggestions((data.suggestions ?? []).length > 0);
+  } catch (err) {
+    console.error("autocomplete error:", err);  // ← also log the error
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }
+}, 180);
   };
 
   // ── Symptom tag helpers ───────────────────────────────────────────────────
