@@ -47,3 +47,15 @@ export async function searchConditions(query: string, limit?: number): Promise<S
   if (!res.ok) throw new Error(`Search failed: ${res.status}`);
   return res.json();
 }
+export async function correctQuery(query: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/correct?q=${encodeURIComponent(query)}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.corrected ?? null;
+  } catch {
+    return null;
+  }
+}
