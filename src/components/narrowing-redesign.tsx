@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Search, ArrowLeft, CheckCircle2, Info } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "./navbar";
 import { useLanguage } from "../contexts/language-context";
-import { searchConditions, SearchResult } from "../contexts/search-api";
+import { searchConditions, SearchResult, correctQuery } from "../contexts/search-api";
 import { API_URL } from "../config";
 
 type Ranker = "bert" | "bm25" | "tfidf";
@@ -35,6 +35,7 @@ export function NarrowingRedesign() {
   const [timingMs,          setTimingMs]          = useState<number | null>(null);
   const [translatedResults, setTranslatedResults] = useState<Record<string, { name: string; description: string }>>({});
   const [currentPage,       setCurrentPage]       = useState(1);
+  const [didYouMean,        setDidYouMean]        = useState<string | null>(null);
 
   // Run search on mount
   useEffect(() => {
@@ -80,6 +81,7 @@ export function NarrowingRedesign() {
   const runSearch = async (q: string) => {
     setIsLoading(true);
     setError(null);
+    setDidYouMean(null);
     try {
       const data = await searchConditions(q);
       setAllResults({
@@ -89,6 +91,12 @@ export function NarrowingRedesign() {
       });
       setTranslatedQuery(data.translatedQuery);
       setTimingMs(data.timingMs);
+
+      // ── Did you mean? — fires when results are empty or very few ──
+      if (data.results.length === 0) {
+        const corrected = await correctQuery(q);
+        setDidYouMean(corrected);
+      }
     } catch {
       setError("Search failed. Please try again.");
     } finally {
@@ -96,8 +104,8 @@ export function NarrowingRedesign() {
     }
   };
 
-  const results         = allResults[ranker];
-  const totalPages      = Math.ceil(results.length / RESULTS_PER_PAGE);
+  const results          = allResults[ranker];
+  const totalPages       = Math.ceil(results.length / RESULTS_PER_PAGE);
   const paginatedResults = results.slice(
     (currentPage - 1) * RESULTS_PER_PAGE,
     currentPage * RESULTS_PER_PAGE
@@ -110,8 +118,9 @@ export function NarrowingRedesign() {
     return t("narrow.related_cond");
   };
 
-  const handleNewSearch = () => {
-    navigate("/narrowing", { state: { query: searchQuery } });
+  const handleNewSearch = (q?: string) => {
+    const target = q ?? searchQuery;
+    navigate("/narrowing", { state: { query: target } });
     window.location.reload();
   };
 
@@ -161,7 +170,7 @@ export function NarrowingRedesign() {
                 className={`w-full ${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"} py-2.5 bg-[#f8fafc] dark:bg-[#111827] border border-[#e2e8f0] dark:border-[#374151] rounded-lg focus:border-[#3B82F6] focus:outline-none text-[#1e293b] dark:text-[#F9FAFB]`}
               />
             </div>
-            <button onClick={handleNewSearch}
+            <button onClick={() => handleNewSearch()}
               className="px-4 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold rounded-lg transition-colors flex-shrink-0">
               {t("narrow.searchBtn")}
             </button>
@@ -202,6 +211,31 @@ export function NarrowingRedesign() {
             ))}
           </div>
         </div>
+
+        {/* ── Did you mean? ── */}
+        <AnimatePresence>
+          {didYouMean && !isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
+              className="mb-4 text-sm text-[#64748b] dark:text-[#94a3b8]"
+            >
+              Did you mean{" "}
+              <button
+                className="text-[#2563EB] dark:text-[#60A5FA] font-medium underline underline-offset-2 hover:text-[#1d4ed8] transition-colors"
+                onClick={() => {
+                  setDidYouMean(null);
+                  handleNewSearch(didYouMean);
+                }}
+              >
+                {didYouMean}
+              </button>
+              ?
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Metrics bar */}
         {!isLoading && !error && (
@@ -274,7 +308,6 @@ export function NarrowingRedesign() {
 
                 {/* Top row: rank + name + score */}
                 <div className={`flex items-start justify-between gap-4 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-                  {/* Score badge — left in RTL */}
                   {isRTL && (
                     <div className="flex-shrink-0 text-right">
                       <div className="text-sm font-semibold text-[#3B82F6]">{getLabel(r.relevanceScore)}</div>
@@ -302,7 +335,6 @@ export function NarrowingRedesign() {
                     </p>
                   </div>
 
-                  {/* Score badge — right in LTR */}
                   {!isRTL && (
                     <div className="flex-shrink-0 ml-4 text-right">
                       <div className="text-sm font-semibold text-[#3B82F6]">{getLabel(r.relevanceScore)}</div>
@@ -346,15 +378,12 @@ export function NarrowingRedesign() {
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => goToPage(page)}
+                  <button key={page} onClick={() => goToPage(page)}
                     className={`w-9 h-9 text-sm font-semibold rounded-lg transition-colors ${
                       currentPage === page
                         ? "bg-[#3B82F6] text-white shadow-sm"
                         : "border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] hover:bg-[#f1f5f9] dark:hover:bg-[#334155]"
-                    }`}
-                  >
+                    }`}>
                     {page}
                   </button>
                 ))}
